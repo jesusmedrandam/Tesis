@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            /* Forzamos el degradado en ambos para evitar espacios blancos */
+            background: #b3d9ff;
+            background: linear-gradient(to bottom, #b3d9ff 0%, #ffffff 70%) no-repeat fixed;
+            font-family: 'sans-serif';
+        }
+
+        .header {
+            padding-top: 50px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a4a73;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 0 30px;
+        }
+
+        .btn {
+            background: #0095ff;
+            color: white;
+            border-radius: 25px;
+            padding: 14px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+    </style>
+
+</head>
+<body>
+<div class="header">
+    <h1>Vincular Dispositivo</h1>
+    <h1>¿Cómo te conectarás?</h1>
+</div>
+<div class="button-container">
+    <a href="vincular_local.html" class="btn">Local</a>
+    <a href="vincular_internet.html" class="btn">Internet</a>
+</div>
+</body>
+</html>

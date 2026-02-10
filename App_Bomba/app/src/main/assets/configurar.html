@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #b3d9ff 0%, #ffffff 70%) no-repeat fixed;
+            font-family: sans-serif;
+        }
+
+        .header {
+            padding-top: 50px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        h1 {
+            color: #1a4a73;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h3 {
+            color: #1a4a73;
+            font-size: 16px;
+            font-weight: normal;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .input-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 30px;
+        }
+
+        .input-box {
+            width: 100%;
+            max-width: 320px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #0095ff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            padding: 0 30px;
+        }
+
+        .btn {
+            background: #0095ff;
+            color: white;
+            border-radius: 25px;
+            padding: 14px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: none;
+        }
+
+        .msg {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Configurar Dispositivo por Primera Vez</h1>
+    <h1>Conectar a Red WiFi</h1>
+
+    <h3>
+        Primero, mantén pulsado el botón On/Off<br>
+        durante 3 segundos.<br><br>
+
+        Luego debes conectar tu teléfono al AP<br>
+        que genera el dispositivo (ESP32).<br><br>
+
+        Ingresa los datos de tu WiFi.
+    </h3>
+</div>
+
+<div class="input-container">
+    <input id="token" type="text" class="input-box" placeholder="Código de Vinculación">
+    <input id="ssid"  type="text" class="input-box" placeholder="SSID">
+    <input id="pass"  type="text" class="input-box" placeholder="Password">
+</div>
+
+<div id="msg" class="msg"></div>
+
+<div class="button-container">
+    <button class="btn" onclick="configurarWifi()">Conectar</button>
+</div>
+
+<script>
+    function configurarWifi() {
+
+        const token = document.getElementById("token").value.trim();
+        const ssid  = document.getElementById("ssid").value.trim();
+        const pass  = document.getElementById("pass").value.trim();
+        const msg   = document.getElementById("msg");
+
+        if (!token || !ssid || !pass) {
+            msg.innerText = "Completa todos los campos";
+            msg.style.color = "red";
+            return;
+        }
+
+        msg.innerText = "Enviando configuración...";
+        msg.style.color = "#1a4a73";
+
+        // Endpoint fijo del ESP32 AP
+        const url = "http://192.168.4.1/api/wifi";
+
+        fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                auth: token,
+                ssid: ssid,
+                pass: pass
+            })
+        })
+        .then(r => r.json())
+        .then(resp => {
+
+            if (resp.ok || resp.success || resp.status === "OK") {
+                msg.innerText = "Configuración enviada ✔\nEl dispositivo se reiniciará";
+                msg.style.color = "green";
+
+                // Guardamos el TOKEN para vincular luego
+                localStorage.setItem("local_token", token);
+
+                setTimeout(() => {
+                    window.location.href = "vincular_local.html";
+                }, 1200);
+
+            } else {
+                msg.innerText = "El dispositivo rechazó la configuración";
+                msg.style.color = "red";
+            }
+        })
+        .catch(() => {
+            msg.innerText = "No se pudo comunicar con el dispositivo";
+            msg.style.color = "red";
+        });
+    }
+</script>
+
+</body>
+</html>

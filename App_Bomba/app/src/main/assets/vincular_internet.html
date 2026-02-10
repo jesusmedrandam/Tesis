@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- ⭐ REDIRIGIR SI YA HAY TOKEN GUARDADO -->
+    <script>
+        if (localStorage.getItem("auth_token")) {
+            window.location.href = "panel.html";
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #b3d9ff 0%, #ffffff 70%) no-repeat fixed;
+            font-family: sans-serif;
+        }
+
+        .header {
+            padding-top: 50px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a4a73;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .container {
+            margin-top: 60px;
+            padding: 0 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .input-box {
+            width: 100%;
+            max-width: 300px;
+            background: white;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #8bb8e0;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            color: #1a4a73;
+        }
+
+        .btn {
+            background: #0095ff;
+            color: white;
+            border-radius: 25px;
+            padding: 14px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .msg {
+            font-size: 16px;
+            color: #1a4a73;
+            font-weight: bold;
+            text-align: center;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Vinculación Online</h1>
+    <h1>Ingresa el Código de Vinculación del Dispositivo</h1>
+    <h3>
+
+        <br><br>
+        Para ver el conocer el código mantén presionado el botón Modo por 3 segundos.
+
+
+
+
+    </h3>
+
+</div>
+
+<div class="container">
+
+    <input id="token" class="input-box" maxlength="12" placeholder="Código de vinculación">
+
+    <button class="btn" onclick="vincularInternet()">Continuar</button>
+
+    <div id="msg" class="msg"></div>
+
+</div>
+
+<script>
+    async function vincularInternet() {
+
+        const token = document.getElementById("token").value.trim();
+        const msg = document.getElementById("msg");
+
+        if (token.length < 5) {
+            msg.innerText = "Código inválido";
+            msg.style.color = "red";
+            return;
+        }
+
+        msg.innerText = "Verificando...";
+        msg.style.color = "#1a4a73";
+
+        try {
+            let r = await fetch("https://appbomba.onrender.com/api/render/status?auth=" + token);
+
+            if (!r.ok) {
+                msg.innerText = "Código incorrecto ❌";
+                msg.style.color = "red";
+                return;
+            }
+
+            let d = await r.json();
+
+            // 🔥 VERIFICACIÓN REAL 🔥
+            if (!d || !d.recibido) {
+                msg.innerText = "Código incorrecto ❌";
+                msg.style.color = "red";
+                return;
+            }
+
+            // ✔ Token válido
+            localStorage.setItem("auth_token", token);
+
+            msg.innerText = "Código aceptado ✔";
+            msg.style.color = "green";
+
+            setTimeout(() => {
+                window.location.href = "panel.html";
+            }, 700);
+
+        } catch (e) {
+            msg.innerText = "Error de conexión";
+            msg.style.color = "red";
+        }
+    }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #b3d9ff 0%, #ffffff 70%) no-repeat fixed;
+            font-family: sans-serif;
+        }
+
+        .header {
+            padding-top: 50px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        h1 {
+            color: #1a4a73;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h3 {
+            color: #1a4a73;
+            font-size: 16px;
+            font-weight: normal;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .input-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 30px;
+        }
+
+        .input-box {
+            width: 100%;
+            max-width: 320px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #0095ff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            padding: 0 30px;
+        }
+
+        .btn {
+            background: #0095ff;
+            color: white;
+            border-radius: 25px;
+            padding: 14px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .msg {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a4a73;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Vincular con Red Local</h1>
+
+    <h3>
+        Tu teléfono debe estar conectado<br>
+        a la misma red WiFi que el dispositivo,<br>
+        o al AP del dispositivo.<br><br>
+        Mantén pulsado el botón On/Off 3 segundos<br>
+        para ver SSID, PASS y TOKEN.
+    </h3>
+</div>
+
+<div class="input-container">
+    <input id="ip" type="text" class="input-box" placeholder="IP del Dispositivo (Ej: 192.168.100.73)">
+    <input id="token" type="text" class="input-box" placeholder="Código de Vinculación">
+</div>
+
+<div class="msg" id="msg"></div>
+
+<div class="button-container">
+    <button class="btn" onclick="vincularLocal()">Vincular</button>
+</div>
+
+<script>
+
+    function vincularLocal() {
+
+        let ip = document.getElementById("ip").value.trim();
+        let token = document.getElementById("token").value.trim();
+        let msg = document.getElementById("msg");
+
+        if (!ip || !token) {
+            msg.innerText = "Completa todos los campos";
+            msg.style.color = "red";
+            return;
+        }
+
+        // Limpiar y normalizar IP
+        ip = ip
+            .replace("http://", "")
+            .replace("https://", "")
+            .replace(/\/+$/, "")  // elimina barras finales
+            .trim();
+
+        let url = `http://${ip}/api/datos?auth=${token}`;
+
+        console.log("URL FINAL:", url);
+
+
+        msg.innerText = "Vinculando...";
+        msg.style.color = "#1a4a73";
+
+        fetch(url)
+            .then(r => {
+                if (!r.ok) throw new Error("HTTP " + r.status);
+                return r.text();   // leer como texto (WebView es sensible)
+            })
+            .then(txt => {
+
+                console.log("RESPUESTA RAW:", txt);
+
+                // Intentar parsear JSON manualmente
+                let data;
+                try {
+                    data = JSON.parse(txt);
+                } catch (e) {
+                    msg.innerText = "El dispositivo devolvió datos inválidos";
+                    msg.style.color = "red";
+                    return;
+                }
+
+                // Guardar IP y token
+                AndroidStore.saveValue("local_ip", ip);
+                AndroidStore.saveValue("local_token", token);
+
+                msg.innerText = "¡Conectado correctamente! ✔";
+                msg.style.color = "green";
+
+                setTimeout(() => {
+                    window.location.href = "panel_local.html";
+                }, 700);
+            })
+            .catch(err => {
+                console.log("ERROR FETCH:", err);
+                msg.innerText = "No se pudo conectar al dispositivo";
+                msg.style.color = "red";
+            });
+    }
+</script>
+
+</body>
+</html>
+

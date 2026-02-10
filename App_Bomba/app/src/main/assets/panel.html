@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background: #eef6ff;
+        }
+
+        /* ----- HEADER ----- */
+        .header {
+            background: #0095ff;
+            color: white;
+            padding: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .settings-btn {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a4a73;
+            margin-bottom: 12px;
+        }
+
+        .state, .data-item {
+            font-size: 16px;
+            color: #1a4a73;
+            margin-bottom: 6px;
+        }
+
+        .label {
+            font-size: 16px;
+            color: #1a4a73;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .bar-container {
+            background: #d8e7f7;
+            width: 100%;
+            height: 22px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #b1cfee;
+        }
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0095ff, #54c7ff);
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: 1px solid #8bb8e0;
+            background: #f5faff;
+            color: #1a4a73;
+        }
+
+        .toggle-btn {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            border: none;
+            background: #0095ff;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <a href="config.html" class="settings-btn">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="white">
+            <path d="M19.14,12.94c0.04-0.31,0.06-0.63,0.06-0.94s-0.02-0.63-0.06-0.94l2.03-1.58
+            c0.18-0.14,0.23-0.41,0.12-0.62l-1.92-3.32c-0.11-0.21-0.36-0.3-0.58-0.22l-2.39,0.96
+            c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.6c-0.04-0.23-0.25-0.4-0.49-0.4h-3.82
+            c-0.24,0-0.44,0.17-0.49,0.4L9.2,5.34C8.61,5.58,8.07,5.9,7.58,6.29L5.19,5.33
+            c-0.22-0.09-0.47,0.01-0.58,0.22L2.69,8.87C2.58,9.08,2.63,9.35,2.81,9.49l2.03,1.58
+            C4.8,11.37,4.78,11.69,4.78,12s0.02,0.63,0.06,0.94l-2.03,1.58
+            c-0.18,0.14-0.23,0.41-0.12,0.62l1.92,3.32c0.11,0.21,0.36,0.3,0.58,0.22l2.39-0.96
+            c0.5,0.38,1.03,0.7,1.62,0.94l0.4,2.74c0.04,0.23,0.25,0.4,0.49,0.4h3.82
+            c0.24,0,0.44-0.17,0.49-0.4l0.4-2.74c0.59-0.24,1.12-0.56,1.62-0.94l2.39,0.96
+            c0.22,0.09,0.47-0.01,0.58-0.22l1.92-3.32c0.11-0.21,0.06-0.48-0.12-0.62L19.14,12.94z
+            M12,15.6c-1.99,0-3.6-1.61-3.6-3.6s1.61-3.6,3.6-3.6s3.6,1.61,3.6,3.6S13.99,15.6,12,15.6z"/>
+        </svg>
+    </a>
+
+    Panel Principal
+</div>
+
+<div class="container">
+
+    <!-- ESTADO DEL SISTEMA -->
+    <div class="card">
+        <div class="card-title">Estado del Sistema</div>
+        <div class="state">Nodo Pozo: <b id="pozoEstado">---</b></div>
+        <div class="state">Bomba: <b id="bombaEstado">---</b></div>
+        <div class="state">Modo de Trabajo: <b id="modoEstado">---</b></div>
+    </div>
+
+    <!-- NIVELES -->
+    <div class="card">
+        <div class="card-title">Niveles de Agua</div>
+
+        <div class="label" id="pozoLabel">Pozo (---%)</div>
+        <div class="bar-container">
+            <div class="bar" id="barPozo" style="width: 0%;"></div>
+        </div>
+
+        <br>
+
+        <div class="label" id="tanqueLabel">Tanque (---%)</div>
+        <div class="bar-container">
+            <div class="bar" id="barTanque" style="width: 0%;"></div>
+        </div>
+    </div>
+
+    <!-- CONTROLES -->
+    <div class="card">
+        <div class="card-title">Controles</div>
+
+        <div class="control-row">
+            <span class="label">Modo:</span>
+            <select id="modoSelect" onchange="cambiarModo()">
+                <option value="MANUAL">Manual</option>
+                <option value="AUTO">Automático</option>
+            </select>
+        </div>
+
+        <div class="control-row">
+            <span class="label">Bomba:</span>
+            <button class="toggle-btn" id="btnBomba" onclick="toggleBomba()">Encender</button>
+        </div>
+    </div>
+
+    <!-- CONFIG POZO -->
+    <div class="card">
+        <div class="card-title">Configuración Pozo</div>
+        <div class="data-item">Nivel mínimo de pozo: <b id="minPozo">---</b></div>
+        <div class="data-item">Profundidad del pozo: <b id="profPozo">---</b></div>
+    </div>
+
+    <!-- CONFIG TANQUE -->
+    <div class="card">
+        <div class="card-title">Configuración Tanque</div>
+        <div class="data-item">Nivel mínimo tanque: <b id="minTanque">---</b></div>
+        <div class="data-item">Nivel máximo tanque: <b id="maxTanque">---</b></div>
+        <div class="data-item">Altura del tanque: <b id="altTanque">---</b></div>
+    </div>
+
+</div>
+
+<!-- =========== SCRIPT =============== -->
+<script>
+
+    const AUTH = localStorage.getItem("auth_token") || "";
+
+    if (!AUTH) {
+        window.location.href = "vincular_internet.html";
+    }
+
+    const CMD_URL = "https://appbomba.onrender.com/api/render/cmd";
+    const STATUS_URL = "https://appbomba.onrender.com/api/render/status?auth=" + AUTH;
+
+    let bombaActual = false;
+
+    function actualizarDatos() {
+
+        fetch(STATUS_URL)
+            .then(r => r.json())
+            .then(d => {
+
+                if (!d.datos) return;
+
+                let datos = d.datos;
+
+                document.getElementById("pozoEstado").innerText =
+                    datos.conexion_pozo ? "Conectado" : "Desconectado";
+
+                bombaActual = datos.bomba;
+                document.getElementById("bombaEstado").innerText =
+                    datos.bomba ? "Encendida" : "Apagada";
+
+                document.getElementById("modoEstado").innerText = datos.modo;
+
+                document.getElementById("barPozo").style.width = datos.nivel_pozo + "%";
+                document.getElementById("barTanque").style.width = datos.nivel_tanque + "%";
+
+                document.getElementById("pozoLabel").innerText =
+                    "Pozo (" + datos.nivel_pozo + "%)";
+
+                document.getElementById("tanqueLabel").innerText =
+                    "Tanque (" + datos.nivel_tanque + "%)";
+
+                document.getElementById("modoSelect").value = datos.modo;
+
+                let btn = document.getElementById("btnBomba");
+                btn.innerText = datos.bomba ? "Apagar" : "Encender";
+                btn.style.background = datos.bomba ? "#d9534f" : "#0095ff";
+
+                document.getElementById("minPozo").innerText = datos.min_pozo + "%";
+                document.getElementById("profPozo").innerText = datos.prof_pozo + " m";
+
+                document.getElementById("minTanque").innerText = datos.min_tanque + "%";
+                document.getElementById("maxTanque").innerText = datos.max_tanque + "%";
+                document.getElementById("altTanque").innerText = datos.alt_tanque + " m";
+            })
+            .catch(() => console.log("Error obteniendo datos"));
+    }
+
+    function toggleBomba() {
+
+        let cmd = bombaActual ? "OFF" : "ON";
+
+        fetch(CMD_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auth: AUTH, cmd })
+        }).then(() => setTimeout(actualizarDatos, 700));
+    }
+
+    function cambiarModo() {
+
+        let modo = document.getElementById("modoSelect").value;
+
+        fetch(CMD_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auth: AUTH, cmd: modo })
+        }).then(() => setTimeout(actualizarDatos, 500));
+    }
+
+    setInterval(actualizarDatos, 2000);
+    actualizarDatos();
+
+</script>
+
+</body>
+</html>
