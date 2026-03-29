@@ -3,7 +3,6 @@
 #include <LoRa.h>
 #include <Preferences.h>
 
-// ================= CONFIGURACIÓN =================
 #define TRIG_POZO 26
 #define ECHO_POZO 27
 #define RELAY_PIN 25
@@ -11,19 +10,18 @@
 #define LORA_RST   14
 #define LORA_DIO0  4 
 
-// ================= VARIABLES =================
 Preferences prefs;
 int nivelPozo = 0;
 bool bombaEstado = false;
 
-float profPozoConfig = 2.0;  // metros
-int minPozoConfig = 20;      // porcentaje
+float profPozoConfig = 2.0; 
+int minPozoConfig = 20;    
 
 unsigned long ultimaComunicacion = 0;
-const unsigned long TIMEOUT_LORA = 30000;       // 30s sin maestro → bomba OFF
-const unsigned long MEDICION_INTERVAL = 3000;   // cada 3s mide el pozo
+const unsigned long TIMEOUT_LORA = 30000;      
+const unsigned long MEDICION_INTERVAL = 3000;   
 
-// ================= FUNCIONES =================
+
 void guardarConfig() {
     prefs.putFloat("profPozo", profPozoConfig);
     prefs.putInt("minPozo", minPozoConfig);
@@ -31,7 +29,7 @@ void guardarConfig() {
 
 
 
-/*  ---------------------MEDIR POZO-----------------*/
+
 void medirNivel() {
     digitalWrite(TRIG_POZO, LOW);
     delayMicroseconds(2);
@@ -75,7 +73,7 @@ void procesarConfiguracion(String json) {
     Serial.println("✔ Configuración actualizada");
 }
 
-// ================= SETUP =================
+
 void setup() {
     Serial.begin(115200);
     Serial.println("\n=== NODO POZO INICIANDO ===");
@@ -101,13 +99,9 @@ void setup() {
     medirNivel();
 }
 
-// ================= LOOP =================
+
 void loop() {
     static unsigned long lastMed = 0;
-
-    // =========================================================
-    // 1. Escuchar al maestro y responder
-    // =========================================================
     int packetSize = LoRa.parsePacket();
     if (packetSize) {
         String msg = "";
@@ -134,22 +128,17 @@ void loop() {
             procesarConfiguracion(msg);
         }
         else {
-            enviarEstado(); // Respuesta a STATUS u otro mensaje
+            enviarEstado();
         }
     }
 
-    // =========================================================
-    // 2. Seguridad: pérdida de comunicación → bomba OFF
-    // =========================================================
+
     if (bombaEstado && millis() - ultimaComunicacion > TIMEOUT_LORA) {
         bombaEstado = false;
         digitalWrite(RELAY_PIN, HIGH);
-        Serial.println("⚠ Timeout maestro → Bomba OFF");
+        Serial.println("Timeout maestro → Bomba OFF");
     }
-
-    // =========================================================
-    // 3. Medición del nivel del pozo y seguridad de nivel bajo
-    // =========================================================
+    
     if (millis() - lastMed > MEDICION_INTERVAL) {
         medirNivel();
         lastMed = millis();
@@ -158,7 +147,7 @@ void loop() {
             bombaEstado = false;
             digitalWrite(RELAY_PIN, HIGH);
             Serial.println(" Nivel bajo → Bomba OFF");
-            // No enviamos estado de golpe para evitar colisión. El maestro lo sabrá en el próximo polling
+
         }
     }
 
