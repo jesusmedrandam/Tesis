@@ -8,16 +8,12 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 
-/* ============================================================
-   CONFIG RENDER
-   ============================================================ */
+
 const char* RENDER_URL = "https://appbomba.onrender.com/api/render/update";
 const char* AUTH_CODE  = "A9F3K2X7";
 unsigned long lastRenderSend = 0;
 
-/* ============================================================
-   PINES
-   ============================================================ */
+
 #define BTN_MODO    32
 #define BTN_BOMBA   33
 #define TRIG_TANQUE 26
@@ -28,15 +24,9 @@ unsigned long lastRenderSend = 0;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-/* ============================================================
-   AP CONFIG
-   ============================================================ */
 #define AP_SSID "AP-ESP32"
 #define AP_PASS "AP14112026"
 
-/* ============================================================
-   VARIABLES
-   ============================================================ */
 float profPozo  = 2.0;
 float altTanque = 1.5;
 
@@ -62,36 +52,26 @@ unsigned long viewStart = 0;
 
 unsigned long lastLoRa = 0;
 
-/* ============================================================
-   BUFFER LCD
-   ============================================================ */
+
 char line0[21], line1[21], line2[21], line3[21];
 char prev0[21], prev1[21], prev2[21], prev3[21];
 
-/* ============================================================
-   LCD transiciones: “Encendiendo/Apagando”
-   ============================================================ */
+
 bool lcdTransicion = false;
 unsigned long lcdTransicionTime = 0;
 
-/* ============================================================
-   SERVIDOR
-   ============================================================ */
+
 Preferences prefs;
 WebServer server(80);
 
-/* ============================================================
-   RESET DE CACHE LCD
-   ============================================================ */
+
 void resetLCDCache() {
     memset(prev0, 0, 21);
     memset(prev1, 0, 21);
     memset(prev2, 0, 21);
     memset(prev3, 0, 21);
 }
-/* ============================================================
-   LCD sin parpadeos
-   ============================================================ */
+
 void actualizarLCDLinea(int row, const char* txt, char* prev) {
     if (strcmp(txt, prev) != 0) {
         strcpy(prev, txt);
@@ -103,11 +83,14 @@ void actualizarLCDLinea(int row, const char* txt, char* prev) {
 
 void actualizarLCD() {
 
-    if (lcdTransicion && millis() - lcdTransicionTime < 1500) {
-        // No refrescar LCD durante transición
+    if (lcdTransicion) {
+    if (millis() - lcdTransicionTime < 1500) {
         return;
+    } else {
+        lcdTransicion = false;
+        resetLCDCache();
     }
-    lcdTransicion = false;
+}
 
     sprintf(line0, "Red:%s Pozo:%s",
             WiFi.status()==WL_CONNECTED ? "WIFI" : "AP",
@@ -125,9 +108,7 @@ void actualizarLCD() {
     actualizarLCDLinea(3, line3, prev3);
 }
 
-/* ============================================================
-   Enviar estado a Render (con modo forzado)
-   ============================================================ */
+
 void enviarEstadoARender(bool forzar = false) {
 
     if (WiFi.status() != WL_CONNECTED) return;
@@ -159,31 +140,8 @@ void enviarEstadoARender(bool forzar = false) {
     http.end();
 }
 
-/* ============================================================
-   Medir tanque
-   ============================================================ */
-/*void medirTanque() {
-    digitalWrite(TRIG_TANQUE, LOW); delayMicroseconds(2);
-    digitalWrite(TRIG_TANQUE, HIGH); delayMicroseconds(10);
-    digitalWrite(TRIG_TANQUE, LOW);
-
-    long d = pulseIn(ECHO_TANQUE, HIGH, 30000);
-    if (d <= 0) return;
-
-    float dist = (d * 0.034) / 2.0;
-    float cap  = altTanque * 100.0;
-    float agua = cap - dist;
-
-    agua = constrain(agua, 0, cap);
-
-    nivelTanque = (agua / cap) * 100.0;
-    nivelTanque = constrain(nivelTanque, 0, 100);
-}*/
 
 
-
-
-/* -------------MEDIR TANQUE---------------------------*/
 void medirTanque() {
 
     const float offsetSensor = 20.0; // cm (sensor 20 cm de punto ciego)
@@ -199,9 +157,9 @@ void medirTanque() {
     long d = pulseIn(ECHO_TANQUE, HIGH, 30000);
     if (d <= 0) return;
 
-    float dist = (d * 0.034) / 2.0;   // distancia en cm
+    float dist = (d * 0.034) / 2.0;  
 
-    float altura = altTanque * 100.0; // altura real del tanque en cm
+    float altura = altTanque * 100.0; 
 
     float distVacio = altura + offsetSensor;
     float distLleno = offsetSensor;
@@ -216,9 +174,6 @@ void medirTanque() {
 }
 
 
-/* ============================================================
-   LoRa
-   ============================================================ */
 void enviarLoRa(String s) {
     LoRa.beginPacket();
     LoRa.print(s);
@@ -244,7 +199,6 @@ void procesarLoRa(String json) {
     conexPozo = true;
     lastLoRa = millis();
 
-    // Si el estado REAL de la bomba cambió → refrescar LCD correctamente
     if (bombaON != prev) {
         lcdTransicion = false;  
         resetLCDCache();
@@ -252,26 +206,42 @@ void procesarLoRa(String json) {
     }
 }
 
-/* ============================================================
-   VIEW + CONFIG
-   ============================================================ */
+
 void mostrarView() {
-    lcd.clear();
-    lcd.setCursor(0,0); lcd.print("IP: "); lcd.print(WiFi.localIP());
-    lcd.setCursor(0,1); lcd.print("TOKEN: "); lcd.print(AUTH_CODE);
-    lcd.setCursor(0,2); lcd.print("Pozo:"); lcd.print(minPozo);
-    lcd.print(" Tq:"); lcd.print(minTanque);
-    lcd.setCursor(0,3); lcd.print("MaxT:"); lcd.print(maxTanque);
+
+    lcd.setCursor(0,0);
+    lcd.print("IP: ");
+    lcd.print(WiFi.localIP());
+
+    lcd.setCursor (0,1);
+    lcd.print("Codigo: ");
+    lcd.print(AUTH_CODE);
+    
+    lcd.setCursor(0,2);
+    lcd.print("Pozo: Min");
+    lcd.print(minPozo);
+    lcd.print(" Prf:");
+    lcd.print(profPozo,1);
+
+    lcd.setCursor(0,3);
+    lcd.print("Tq: Mi");
+    lcd.print(minTanque);
+    lcd.print(" Mx");
+    lcd.print(maxTanque);
+    lcd.print(" Al");
+    lcd.print(altTanque,1);
+
+    
 }
 
 void iniciarConfig() {
     configMode = true;
     configStart = millis();
     lcd.clear();
-    lcd.setCursor(0,0); lcd.print("ACCESS POINT");
+    lcd.setCursor(0,0); lcd.print(" MODO CONFIGURACION ");
     lcd.setCursor(0,1); lcd.print("SSID: "); lcd.print(AP_SSID);
     lcd.setCursor(0,2); lcd.print("PASS: "); lcd.print(AP_PASS);
-    lcd.setCursor(0,3); lcd.print("TOKEN: "); lcd.print(AUTH_CODE);
+    lcd.setCursor(0,3); lcd.print("CODIGO: "); lcd.print(AUTH_CODE);
 }
 
 void iniciarView() {
@@ -280,9 +250,7 @@ void iniciarView() {
     lcd.clear();
 }
 
-/* ============================================================
-   TOKEN
-   ============================================================ */
+
 bool validarToken() {
     if (server.hasHeader("x-auth-token"))
         if (server.header("x-auth-token") == AUTH_CODE)
@@ -294,30 +262,32 @@ bool validarToken() {
 
     return false;
 }
-/* ============================================================
-   CORS
-   ============================================================ */
+
 void sendCORS() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     server.sendHeader("Access-Control-Allow-Headers", "Content-Type, x-auth-token");
 }
 
-/* ============================================================
-   CHECKCOMMANDO DESDE RENDER
-   ============================================================ */
+
 void checkRenderComando() {
 
     if (WiFi.status() != WL_CONNECTED) return;
 
     HTTPClient http;
     String url = "https://appbomba.onrender.com/api/render/cmd?auth=A9F3K2X7";
+
     http.begin(url);
+    http.setTimeout(500); 
 
     int code = http.GET();
-    if (code != 200) { http.end(); return; }
+    if (code != 200) { 
+        http.end(); 
+        return; 
+    }
 
     String payload = http.getString();
+    http.end();   // 👈 MOVER AQUÍ (IMPORTANTE)
     payload.trim();
 
     if (payload.indexOf("\"cmd\":\"ON\"") != -1) {
@@ -386,13 +356,8 @@ void checkRenderComando() {
             enviarEstadoARender(true);
         }
     }
-
-    http.end();
 }
 
-/* ============================================================
-   ENDPOINTS
-   ============================================================ */
 void handleWiFiSet() {
     sendCORS();
     if (!validarToken()) { server.send(401,"application/json","{\"error\":\"token\"}"); return; }
@@ -523,14 +488,9 @@ void handleComando() {
     enviarEstadoARender(true);
 }
 
-/* ============================================================
-   LÓGICA BOMBA AUTOMÁTICA
-   ============================================================ */
-void logicaBomba() {
 
-    // =======================
+void logicaBomba() {
     //  MODO MANUAL
-    // =======================
     if (!modoAuto) {
 
         static bool last = HIGH;
@@ -557,32 +517,43 @@ void logicaBomba() {
         }
         last = btn;
 
-        // Seguridad manual: apagar si pozo bajo
         if (bombaON && nivelPozo <= minPozo) {
             enviarLoRa("{\"cmd\":\"OFF\"}");
         }
 
-        return;  // <- NO hacer lógica automática
+        return; 
     }
 
-    // =======================
     //  MODO AUTOMÁTICO
-    // =======================
     if (conexPozo && nivelPozo > minPozo) {
 
-        if (!bombaON && nivelTanque < minTanque) {
-            lcd.setCursor(0,3); lcd.print("Bomba: Encendiendo ");
-            lcdTransicion = true;
-            lcdTransicionTime = millis();
-            enviarLoRa("{\"cmd\":\"ON\"}");
-        }
+        static bool ordenEncendido = false;
 
-        if (bombaON && (nivelPozo <= minPozo || nivelTanque >= maxTanque)) {
-            lcd.setCursor(0,3); lcd.print("Bomba: Apagando    ");
-            lcdTransicion = true;
-            lcdTransicionTime = millis();
-            enviarLoRa("{\"cmd\":\"OFF\"}");
-        }
+if (!bombaON && nivelTanque < minTanque) {
+    if (!ordenEncendido) {
+        lcd.setCursor(0,3); lcd.print("Bomba: Encendiendo ");
+        lcdTransicion = true;
+        lcdTransicionTime = millis();
+        enviarLoRa("{\"cmd\":\"ON\"}");
+        ordenEncendido = true;
+    }
+} else {
+    ordenEncendido = false;
+}
+
+        static bool ordenApagado = false;
+
+if (bombaON && (nivelPozo <= minPozo || nivelTanque >= maxTanque)) {
+    if (!ordenApagado) {
+        lcd.setCursor(0,3); lcd.print("Bomba: Apagando    ");
+        lcdTransicion = true;
+        lcdTransicionTime = millis();
+        enviarLoRa("{\"cmd\":\"OFF\"}");
+        ordenApagado = true;
+    }
+} else {
+    ordenApagado = false;
+}
 
     } else {
         if (bombaON) {
@@ -593,9 +564,7 @@ void logicaBomba() {
         }
     }
 }
-/*************************************************************
- *  SETUP
- *************************************************************/
+
 void setup() {
 
     Serial.begin(115200);
@@ -648,17 +617,14 @@ void setup() {
     resetLCDCache();
 }
 
-/*************************************************************
- *  LOOP PRINCIPAL OPTIMIZADO
- *************************************************************/
 void loop() {
+   /* RENDER */
+static unsigned long lastCmdCheck = 0;
 
-    /* RENDER */
-    static unsigned long lastCmdCheck = 0;
-    if (millis() - lastCmdCheck > 1000) {
-        checkRenderComando();
-        lastCmdCheck = millis();
-    }
+if (millis() - lastCmdCheck > 8000 && !lcdTransicion) {
+    checkRenderComando();
+    lastCmdCheck = millis();
+}
 
     /* BOTÓN BOMBA */
     static bool bHold = false;
@@ -716,27 +682,45 @@ void loop() {
     }
 
     /* VIEW MODE */
-    if (viewMode) {
+    static bool btnReleased = false;
 
-        if (millis() - viewStart > 30000) {
-            viewMode = false;
-            lcd.clear();
-            resetLCDCache();
-            actualizarLCD(); 
-        }
-        else mostrarView();
+if (viewMode) {
 
-        if (digitalRead(BTN_MODO) == LOW) {
-            viewMode = false;
-            lcd.clear();
-            resetLCDCache();
-            actualizarLCD(); 
-            delay(200);
-        }
-
-        server.handleClient();
-        return;
+    // esperar que el botón se suelte primero
+    if (!btnReleased && digitalRead(BTN_MODO) == HIGH) {
+        btnReleased = true;
     }
+
+    // salir solo si vuelve a presionar
+    if (btnReleased && digitalRead(BTN_MODO) == LOW) {
+        viewMode = false;
+        btnReleased = false;
+
+        lcd.clear();
+        resetLCDCache();
+        actualizarLCD();
+        delay(200);
+    }
+
+    // timeout
+    if (millis() - viewStart > 30000) {
+        viewMode = false;
+        btnReleased = false;
+
+        lcd.clear();
+        resetLCDCache();
+        actualizarLCD();
+    }
+    else {
+        mostrarView();
+    }
+
+    server.handleClient();
+    return;
+}
+
+
+
 
     /* LoRa PING */
     static unsigned long lastPing = 0;
@@ -760,7 +744,10 @@ void loop() {
         }
     }
 
-    if (millis() - lastLoRa > 30000) conexPozo = false;
+    if (millis() - lastLoRa > 30000) {
+    conexPozo = false;
+    bombaON = false;
+}
 
     /* MEDIR TANQUE */
     static unsigned long lastTank = 0;
@@ -773,9 +760,17 @@ void loop() {
     logicaBomba();
 
     /* WIFI */
-    if (WiFi.status() != WL_CONNECTED) WiFi.softAP(AP_SSID, AP_PASS);
-    else WiFi.softAPdisconnect(true);
+    static bool apActivo = false;
 
+if (WiFi.status() != WL_CONNECTED && !apActivo) {
+    WiFi.softAP(AP_SSID, AP_PASS);
+    apActivo = true;
+}
+
+if (WiFi.status() == WL_CONNECTED && apActivo) {
+    WiFi.softAPdisconnect(true);
+    apActivo = false;
+}
     /* LCD */
     static unsigned long lastLCD = 0;
     if (!viewMode && millis() - lastLCD > 300) {
